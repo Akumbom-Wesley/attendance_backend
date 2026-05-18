@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django_celery_results',
 
     # Local apps
+    'apps.common',
     'apps.companies',
     'apps.employees',
     'apps.devices',
