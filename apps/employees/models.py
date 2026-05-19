@@ -1,9 +1,15 @@
 from django.db import models
+from django.conf import settings
 from apps.common.models import BaseModel
 from apps.companies.models import Company
 
 
 class Employee(BaseModel):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='employee_profile'
+    )
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
@@ -26,7 +32,6 @@ class Employee(BaseModel):
 
     def get_current_status(self):
         return self.statuses.order_by('-changed_at').first()
-    
 class EmployeeStatus(BaseModel):
     STATUS_CHOICES = [
         ('present', 'Present'),

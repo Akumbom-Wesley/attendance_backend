@@ -3,6 +3,8 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+AUTH_USER_MODEL = 'accounts.User'
+
 SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 INSTALLED_APPS = [
@@ -22,6 +24,7 @@ INSTALLED_APPS = [
     'django_celery_results',
 
     # Local apps
+    'apps.accounts',
     'apps.common',
     'apps.companies',
     'apps.employees',
