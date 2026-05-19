@@ -1,0 +1,13 @@
+-r base.txt
+
+# Testing
+pytest
+pytest-django
+pytest-cov
+factory-boy
+faker
+freezegun
+responses
+
+# Dev conveniences
+ipython
