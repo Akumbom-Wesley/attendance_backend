@@ -8,6 +8,7 @@ whitenoise
 
 # Task Queue
 celery
+redis
 django-celery-beat
 django-celery-results
 
@@ -18,3 +19,4 @@ django-ratelimit
 
 # API Documentation
 drf-spectacular
+

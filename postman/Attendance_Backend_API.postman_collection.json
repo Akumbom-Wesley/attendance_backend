@@ -1,0 +1,206 @@
+{
+  "info": {
+    "_postman_id": "133b5cd6-1f28-4d5d-9a1e-36ab58101053",
+    "name": "Attendance Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "27818845"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "if (res.access) {",
+                  "    pm.environment.set(\"access_token\", res.access);",
+                  "    console.log(\"✅ Access token saved\");",
+                  "}",
+                  "",
+                  "if (res.refresh) {",
+                  "    pm.environment.set(\"refresh_token\", res.refresh);",
+                  "    console.log(\"✅ Refresh token saved\");",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"your_superuser_username\",\n    \"password\": \"your_superuser_password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/token/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "token",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "if (res.access) {",
+                  "    pm.environment.set(\"access_token\", res.access);",
+                  "    console.log(\"✅ Access token refreshed\");",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/token/refresh/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "token",
+                "refresh",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": []
+    },
+    {
+      "name": "Geofence Sites",
+      "item": []
+    },
+    {
+      "name": "Employees",
+      "item": []
+    },
+    {
+      "name": "Device Bindings",
+      "item": []
+    },
+    {
+      "name": "Checkins",
+      "item": []
+    },
+    {
+      "name": "Webhook Events",
+      "item": []
+    },
+    {
+      "name": "Audit Logs",
+      "item": []
+    },
+    {
+      "name": "🔍 Swagger UI",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/schema/swagger-ui/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "schema",
+            "swagger-ui",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
