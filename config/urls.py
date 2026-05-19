@@ -17,7 +17,7 @@ urlpatterns = [
 
     # App routes — wired in as we build each app
     path('api/v1/auth/', include('apps.accounts.urls')),
-#     path('api/v1/companies/', include('apps.companies.urls')),
+    path('api/v1/companies/', include('apps.companies.urls')),
 #     path('api/v1/employees/', include('apps.employees.urls')),
 #     path('api/v1/devices/', include('apps.devices.urls')),
 #     path('api/v1/checkins/', include('apps.checkins.urls')),
