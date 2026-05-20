@@ -1,11 +1,17 @@
 from pathlib import Path
 from decouple import config
 
+from datetime import timedelta
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 AUTH_USER_MODEL = 'accounts.User'
 
 SECRET_KEY = config('DJANGO_SECRET_KEY')
+
+ERPNEXT_BASE_URL = config("ERPNEXT_BASE_URL")
+ERPNEXT_API_KEY = config("ERPNEXT_API_KEY")
+ERPNEXT_API_SECRET = config("ERPNEXT_API_SECRET")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,6 +38,7 @@ INSTALLED_APPS = [
     'apps.checkins',
     'apps.webhooks',
     'apps.audit',
+    'apps.sync',
 ]
 
 MIDDLEWARE = [
@@ -104,6 +111,17 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
 }
 
 # drf-spectacular (Swagger)
