@@ -21,9 +21,8 @@ def api_client():
 
 
 @pytest.fixture
-def authenticated_client(api_client, user_factory):
-    def _authenticated_client(role='EMPLOYEE'):
-        user = user_factory(role=role)
+def authenticated_client(api_client):
+    def _authenticated_client(user):
         api_client.force_authenticate(user=user)
-        return api_client, user
+        return api_client
     return _authenticated_client
