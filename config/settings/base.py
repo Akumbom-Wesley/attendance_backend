@@ -9,6 +9,10 @@ AUTH_USER_MODEL = 'accounts.User'
 
 SECRET_KEY = config('DJANGO_SECRET_KEY')
 
+ERPNEXT_BASE_URL = config("ERPNEXT_BASE_URL")
+ERPNEXT_API_KEY = config("ERPNEXT_API_KEY")
+ERPNEXT_API_SECRET = config("ERPNEXT_API_SECRET")
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,6 +38,7 @@ INSTALLED_APPS = [
     'apps.checkins',
     'apps.webhooks',
     'apps.audit',
+    'apps.sync',
 ]
 
 MIDDLEWARE = [
