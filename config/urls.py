@@ -20,7 +20,7 @@ urlpatterns = [
     path('api/v1/companies/', include('apps.companies.urls')),
     path('api/v1/employees/', include('apps.employees.urls', namespace='employees')),
 #     path('api/v1/devices/', include('apps.devices.urls')),
-#     path('api/v1/checkins/', include('apps.checkins.urls')),
+    path('api/v1/checkins/', include('apps.checkins.urls', namespace='checkins')),
     path('api/v1/webhooks/', include('apps.webhooks.urls', namespace='webhooks')),
 #     path('api/v1/audit/', include('apps.audit.urls')),
     path('api/v1/sync/', include('apps.sync.urls', namespace='sync')),

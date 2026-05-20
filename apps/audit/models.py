@@ -34,7 +34,9 @@ class AuditLog(BaseModel):
     employee = models.ForeignKey(
         Employee,
         on_delete=models.PROTECT,
-        related_name='audit_logs'
+        related_name='audit_logs',
+        null=True,
+        blank=True
     )
     biometric_result = models.BooleanField(default=False)
     geofence_result = models.BooleanField(default=False)
@@ -56,7 +58,9 @@ class AuditLog(BaseModel):
 
     class Meta:
         db_table = 'audit_logs'
-        # Immutable — no update methods ever
+        indexes = [
+            models.Index(fields=['employee', 'created_at']),
+        ]
 
     def __str__(self):
         return f"AuditLog #{self.pk} — {self.final_decision}"
