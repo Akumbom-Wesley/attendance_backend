@@ -46,11 +46,15 @@ def push_checkin_to_erpnext(self, checkin_record_id: int):
         raise self.retry(exc=exc)
 
 
-@celery_app.task(bind=True, name="checkins.sync_offline_batch")
+@celery_app.task(bind=True, name="checkins.sync_offline_batch", max_retries=3, default_retry_delay=30)
 def sync_offline_batch(self, records: list):
     """
-    Process a batch of offline checkin records through the validation pipeline.
-    Retry policy: 3 retries, 30s backoff.
-    UC21 — implementation in Sprint 5.
+    Process a batch of offline checkin records through OfflineCheckinValidationService.
+    Each record runs the full pipeline (minus gps-vs-server delta).
+    Passing records get is_flagged=True for HR Admin review.
     """
-    raise NotImplementedError("Implement in Sprint 5")
+    from apps.checkins.services import OfflineCheckinValidationService
+
+    for record_data in records:
+        service = OfflineCheckinValidationService(payload=record_data)
+        service.run()

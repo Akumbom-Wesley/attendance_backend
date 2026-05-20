@@ -32,53 +32,38 @@ class CheckinValidationService:
     # ------------------------------------------------------------------ #
 
     def run(self):
-        """
-        Execute the pipeline in strict order.
-        Returns (http_status_code, response_data_dict).
-        Always writes an AuditLog on every outcome.
-        """
-
-        # Step 1 — Device binding
         result = self._check_device_binding()
         if result:
             return result
 
-        # Step 2 — Anti-spoofing
         result = self._check_antispoofing()
         if result:
             return result
 
-        # Step 3 — Timestamp plausibility
         result = self._check_timestamps()
         if result:
             return result
 
-        # Step 4 — GPS geofence
         result = self._check_geofence()
         if result:
             return result
 
-        # Step 5 — Biometric
         result = self._check_biometric()
         if result:
             return result
 
-        # Step 6 — Wi-Fi RSSI
         two_factor_only, result = self._check_wifi_rssi()
         if result:
             return result
 
-        # Step 7 — Duplicate check
         result = self._check_duplicate()
         if result:
             return result
 
-        # Step 8 — Log type validation
         result = self._check_log_type()
         if result:
             return result
 
-        # Step 9 — Pass
         return self._pass(two_factor_only)
 
     # ------------------------------------------------------------------ #
@@ -202,7 +187,6 @@ class CheckinValidationService:
         return None
 
     def _check_wifi_rssi(self):
-        """Returns (two_factor_only: bool, error_tuple | None)."""
         wifi_band = self.payload.get("wifi_band", "UNAVAILABLE")
 
         if wifi_band == "UNAVAILABLE":
@@ -345,7 +329,6 @@ class CheckinValidationService:
 
     @staticmethod
     def _haversine(lat1, lng1, lat2, lng2) -> float:
-        """Returns distance in metres between two GPS coordinates."""
         R = 6_371_000
         phi1, phi2 = math.radians(lat1), math.radians(lat2)
         dphi = math.radians(lat2 - lat1)
@@ -355,3 +338,70 @@ class CheckinValidationService:
             + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
         )
         return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+class OfflineCheckinValidationService(CheckinValidationService):
+    """
+    Identical to the online pipeline with two modifications:
+    - Step 3 skips the gps-vs-server delta check (records are legitimately old)
+    - Step 9 (_pass) sets is_flagged=True on every created CheckinRecord
+    """
+
+    def _check_timestamps(self):
+        ts_gps = self.payload["timestamp_gps"]
+        ts_device = self.payload["timestamp_device"]
+
+        gps_device_delta = abs((ts_gps - ts_device).total_seconds())
+
+        if gps_device_delta >= self.GPS_DEVICE_MAX_DELTA:
+            self._write_audit_log(
+                error_code="TIMESTAMP_IMPLAUSIBLE",
+                final_decision="FAIL",
+                biometric_result=False,
+                geofence_result=False,
+                rssi_result=False,
+                antispoofing_result=True,
+                wifi_available=True,
+                two_factor_only=False,
+            )
+            return 422, {"detail": "Timestamp implausible."}
+
+        return None
+
+    def _pass(self, two_factor_only: bool):
+        from apps.checkins.tasks import push_checkin_to_erpnext
+
+        record = CheckinRecord.objects.create(
+            device_binding=self.device_binding,
+            log_type=self.payload["log_type"],
+            timestamp_gps=self.payload["timestamp_gps"],
+            timestamp_device=self.payload["timestamp_device"],
+            sync_received_at=self.server_now,
+            gps_lat_smoothed=self.payload["gps_lat_smoothed"],
+            gps_lng_smoothed=self.payload["gps_lng_smoothed"],
+            gps_accuracy_metres=self.payload["gps_accuracy_metres"],
+            rssi_avg=self.payload.get("rssi_avg"),
+            wifi_ssid=self.payload.get("wifi_ssid", ""),
+            wifi_bssid=self.payload.get("wifi_bssid", ""),
+            wifi_band=self.payload.get("wifi_band", "UNAVAILABLE"),
+            biometric_passed=self.payload.get("biometric_passed", False),
+            is_flagged=True,
+        )
+
+        final_decision = "TWO_FACTOR_ONLY" if two_factor_only else "PASS"
+
+        self._write_audit_log(
+            error_code="SUCCESS",
+            final_decision=final_decision,
+            biometric_result=True,
+            geofence_result=True,
+            rssi_result=not two_factor_only,
+            antispoofing_result=True,
+            wifi_available=not two_factor_only,
+            two_factor_only=two_factor_only,
+            checkin_record=record,
+        )
+
+        push_checkin_to_erpnext.delay(record.id)
+
+        return 201, {"id": record.id, "final_decision": final_decision}

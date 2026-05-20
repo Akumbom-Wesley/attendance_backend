@@ -1,3 +1,5 @@
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import serializers
 from apps.checkins.models import CheckinRecord
 
@@ -44,3 +46,16 @@ class CheckinRecordSerializer(serializers.ModelSerializer):
             "is_synced",
             "created_at",
         ]
+
+
+class OfflineBatchSerializer(serializers.Serializer):
+    records = serializers.ListField(
+        child=CheckinSerializer(),
+        min_length=1,
+        error_messages={"min_length": "records list must not be empty."},
+    )
+
+
+def serialize_records_for_celery(records: list) -> list:
+    """Convert validated_data records (with datetime/Decimal) to JSON-safe dicts for Celery."""
+    return json.loads(json.dumps(records, cls=DjangoJSONEncoder))
