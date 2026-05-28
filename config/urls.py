@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/v1/webhooks/', include('apps.webhooks.urls', namespace='webhooks')),
 #     path('api/v1/audit/', include('apps.audit.urls')),
     path('api/v1/sync/', include('apps.sync.urls', namespace='sync')),
+    path("api/v1/reports/", include("apps.reports.urls")),
  ]
