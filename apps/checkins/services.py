@@ -386,6 +386,7 @@ class OfflineCheckinValidationService(CheckinValidationService):
             wifi_band=self.payload.get("wifi_band", "UNAVAILABLE"),
             biometric_passed=self.payload.get("biometric_passed", False),
             is_flagged=True,
+            flag_reason="OFFLINE_RECORD",
         )
 
         final_decision = "TWO_FACTOR_ONLY" if two_factor_only else "PASS"
@@ -405,3 +406,62 @@ class OfflineCheckinValidationService(CheckinValidationService):
         push_checkin_to_erpnext.delay(record.id)
 
         return 201, {"id": record.id, "final_decision": final_decision}
+    
+class FlaggedRecordService:
+
+    @staticmethod
+    def get_queryset(user):
+        """Return flagged records scoped by user role."""
+        from apps.checkins.models import CheckinRecord
+        qs = CheckinRecord.objects.filter(is_flagged=True).select_related(
+            "device_binding__employee__company",
+            "reviewed_by",
+        )
+        if user.role == "HR_ADMIN":
+            qs = qs.filter(device_binding__employee__company=user.company)
+        return qs
+
+    @staticmethod
+    def apply_status_filter(qs, status):
+        if status == "pending":
+            return qs.filter(is_approved=False, is_rejected=False)
+        if status == "approved":
+            return qs.filter(is_approved=True)
+        if status == "rejected":
+            return qs.filter(is_rejected=True)
+        return qs
+
+    @staticmethod
+    def get_flagged_record_for_user(pk, user):
+        """Fetch a single flagged record, enforcing company scope. Raises 404 if not found."""
+        from apps.checkins.models import CheckinRecord
+        from rest_framework.exceptions import NotFound
+        qs = FlaggedRecordService.get_queryset(user)
+        try:
+            return qs.get(pk=pk)
+        except CheckinRecord.DoesNotExist:
+            raise NotFound()
+
+    @staticmethod
+    def approve(record, user, review_note):
+        from django.utils import timezone
+        from apps.checkins.tasks import push_checkin_to_erpnext
+
+        record.is_approved = True
+        record.review_note = review_note
+        record.reviewed_by = user
+        record.reviewed_at = timezone.now()
+        record.save()
+
+        if not record.is_synced:
+            push_checkin_to_erpnext.delay(record.id)
+
+    @staticmethod
+    def reject(record, user, review_note):
+        from django.utils import timezone
+
+        record.is_rejected = True
+        record.review_note = review_note
+        record.reviewed_by = user
+        record.reviewed_at = timezone.now()
+        record.save()

@@ -59,3 +59,31 @@ class OfflineBatchSerializer(serializers.Serializer):
 def serialize_records_for_celery(records: list) -> list:
     """Convert validated_data records (with datetime/Decimal) to JSON-safe dicts for Celery."""
     return json.loads(json.dumps(records, cls=DjangoJSONEncoder))
+
+class FlaggedRecordSerializer(serializers.ModelSerializer):
+    reviewed_by = serializers.StringRelatedField()
+
+    class Meta:
+        model = CheckinRecord
+        fields = [
+            "id",
+            "log_type",
+            "timestamp_gps",
+            "timestamp_device",
+            "flag_reason",
+            "is_flagged",
+            "is_approved",
+            "is_rejected",
+            "is_synced",
+            "review_note",
+            "reviewed_by",
+            "reviewed_at",
+            "created_at",
+        ]
+
+
+class ReviewNoteSerializer(serializers.Serializer):
+    review_note = serializers.CharField(min_length=1, error_messages={
+        "blank": "review_note is required.",
+        "min_length": "review_note is required.",
+    })
