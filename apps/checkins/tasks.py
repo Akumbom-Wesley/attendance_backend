@@ -46,15 +46,31 @@ def push_checkin_to_erpnext(self, checkin_record_id: int):
         raise self.retry(exc=exc)
 
 
-@celery_app.task(bind=True, name="checkins.sync_offline_batch", max_retries=3, default_retry_delay=30)
+@celery_app.task(
+    bind=True,
+    name="checkins.sync_offline_batch",
+    max_retries=3,
+    default_retry_delay=30,
+)
 def sync_offline_batch(self, records: list):
     """
     Process a batch of offline checkin records through OfflineCheckinValidationService.
-    Each record runs the full pipeline (minus gps-vs-server delta).
+    Records arrive as JSON-safe dicts (ISO strings for datetimes, strings for Decimals).
+    Each record is re-deserialized through CheckinSerializer to restore proper types
+    before being passed to the service.
     Passing records get is_flagged=True for HR Admin review.
     """
+    from apps.checkins.serializers import CheckinSerializer
     from apps.checkins.services import OfflineCheckinValidationService
 
     for record_data in records:
-        service = OfflineCheckinValidationService(payload=record_data)
+        serializer = CheckinSerializer(data=record_data)
+        if not serializer.is_valid():
+            # Malformed record — skip silently; no AuditLog possible without
+            # a valid device_unique_id to even attempt device lookup.
+            continue
+
+        service = OfflineCheckinValidationService(
+            payload=serializer.validated_data
+        )
         service.run()

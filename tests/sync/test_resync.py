@@ -18,8 +18,7 @@ from tests.factories.company_factory import CompanyFactory
 from tests.factories.user_factory import UserFactory
 
 
-ERPNEXT_BASE = "https://erp.nchemty.com"
-
+ERPNEXT_BASE = "https://tarh.work"
 
 # ------------------------------------------------------------------ #
 #  Fixtures                                                            #
