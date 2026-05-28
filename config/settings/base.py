@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.webhooks',
     'apps.audit',
     'apps.sync',
+    "apps.reports",
 ]
 
 MIDDLEWARE = [
