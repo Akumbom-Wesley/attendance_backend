@@ -58,3 +58,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'is_onboarded',
         )
         read_only_fields = fields
+
+
+class SetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)
