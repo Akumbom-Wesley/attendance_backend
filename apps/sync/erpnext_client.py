@@ -99,4 +99,31 @@ class ERPNextClient:
     def get_employee(self, erpnext_employee_id: str) -> dict:
         """Returns a single Employee record by ERPNext employee ID."""
         data = self._get(f"/api/resource/Employee/{erpnext_employee_id}")
+        
         return data.get("data", {})
+    
+    def _post(self, path: str, data: dict) -> dict:
+        """
+        Internal POST helper. Raises ERPNextAPIError on non-2xx.
+        Returns parsed JSON dict.
+        """
+        url = f"{self.base_url}{path}"
+        try:
+            response = requests.post(url, headers=self.headers, json=data, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        except requests.HTTPError as e:
+            logger.error("ERPNext HTTP error: %s — %s", e, response.text)
+            raise ERPNextAPIError(f"HTTP {response.status_code}: {response.text}") from e
+        except requests.RequestException as e:
+            logger.error("ERPNext request failed: %s", e)
+            raise ERPNextAPIError(str(e)) from e
+
+    def create_employee_checkin(self, data: dict) -> dict:
+        """
+        Creates an Employee Checkin doc in ERPNext.
+        data must contain: employee, time, log_type, device_id, skip_auto_attendance
+        """
+        result = self._post("/api/resource/Employee Checkin", {"data": data})
+        return result.get("data", {})
+

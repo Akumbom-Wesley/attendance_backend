@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from apps.common.models import BaseModel
 from apps.devices.models import DeviceBinding
 
@@ -13,6 +14,11 @@ class CheckinRecord(BaseModel):
         ('2.4GHz', '2.4GHz'),
         ('5GHz', '5GHz'),
         ('UNAVAILABLE', 'Unavailable'),
+    ]
+
+    FLAG_REASON_CHOICES = [
+        ('OFFLINE_RECORD', 'Offline record pending review'),
+        ('MANUAL_FLAG', 'Manually flagged by admin'),
     ]
 
     device_binding = models.ForeignKey(
@@ -38,6 +44,24 @@ class CheckinRecord(BaseModel):
     biometric_passed = models.BooleanField(default=False)
     is_flagged = models.BooleanField(default=False)
     is_synced = models.BooleanField(default=False)
+
+    # Review fields
+    is_approved = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
+    flag_reason = models.CharField(
+        max_length=100,
+        blank=True,
+        choices=FLAG_REASON_CHOICES,
+    )
+    review_note = models.CharField(max_length=500, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='reviewed_checkins',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'checkin_records'

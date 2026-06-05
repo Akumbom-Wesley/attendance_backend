@@ -16,7 +16,7 @@ from apps.employees.models import Employee
 from apps.accounts.models import User
 
 
-ERPNEXT_BASE = "https://erp.nchemty.com"
+ERPNEXT_BASE = "https://tarh.work"
 
 
 # ------------------------------------------------------------------ #

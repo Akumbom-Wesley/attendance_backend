@@ -20,3 +20,8 @@ django-ratelimit
 # API Documentation
 drf-spectacular
 
+# Timezone Handling
+pytz==2026.2
+
+#Report Generation
+reportlab==4.5.1
