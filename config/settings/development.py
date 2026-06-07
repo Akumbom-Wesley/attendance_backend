@@ -15,3 +15,16 @@ CORS_ALLOWED_ORIGINS = [
 
 # Emails just print to console in dev
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# config/settings/development.py — temporary
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "loggers": {
+        "django.security": {"handlers": ["console"], "level": "DEBUG"},
+        "django.request": {"handlers": ["console"], "level": "DEBUG"},
+    },
+}
