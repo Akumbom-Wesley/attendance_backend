@@ -37,11 +37,15 @@ class RegisterDeviceView(APIView):
                 device_unique_id=serializer.validated_data["device_unique_id"],
                 attendance_device_id=serializer.validated_data["attendance_device_id"],
             )
-        except ValueError:
-            return Response(
-                {"detail": "A device is already bound to this account. Ask HR to unbind first."},
-                status=status.HTTP_409_CONFLICT,
-            )
+        except ValueError as e:
+            error_code = str(e)
+            if error_code == "ALREADY_BOUND":
+                detail = "A device is already bound to this account. Ask HR to unbind first."
+            elif error_code == "DEVICE_ALREADY_BOUND_TO_OTHER":
+                detail = "This device is already registered to another employee. Ask HR to unbind it first."
+            else:
+                detail = "Device registration failed."
+            return Response({"detail": detail}, status=status.HTTP_409_CONFLICT)
 
         return Response(
             DeviceBindingSerializer(binding).data,

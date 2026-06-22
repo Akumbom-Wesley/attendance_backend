@@ -7,6 +7,11 @@ from .models import User
 class LoginSerializer(serializers.Serializer):
     erpnext_employee_id = serializers.CharField()
     password = serializers.CharField(write_only=True)
+    employee_id = serializers.SerializerMethodField()
+
+    def get_employee_id(self, obj):
+        profile = getattr(obj, 'employee_profile', None)
+        return profile.pk if profile else None
 
     def validate(self, data):
         erpnext_employee_id = data.get('erpnext_employee_id')
@@ -28,11 +33,15 @@ class LoginSerializer(serializers.Serializer):
 
     def get_tokens(self, user):
         refresh = RefreshToken.for_user(user)
+        profile = getattr(user, 'employee_profile', None)
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'role': user.role,
             'user_id': user.id,
+            'employee_id': profile.pk if profile else None,
+            'erpnext_employee_id': user.erpnext_employee_id,
+            'full_name': profile.full_name if profile else None,
         }
 
 
@@ -42,6 +51,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only=True,
         allow_null=True
     )
+    employee_id = serializers.SerializerMethodField()
+
+    def get_employee_id(self, obj):
+        profile = getattr(obj, 'employee_profile', None)
+        return profile.pk if profile else None
 
     class Meta:
         model = User
@@ -56,5 +70,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'company',
             'company_name',
             'is_onboarded',
+            'employee_id',
         )
         read_only_fields = fields
+
+class SetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)

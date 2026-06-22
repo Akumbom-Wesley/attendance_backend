@@ -55,6 +55,8 @@ class EmployeeStatus(BaseModel):
     class Meta:
         db_table = 'employee_statuses'
         get_latest_by = 'changed_at'
+        verbose_name = "Employee Status"
+        verbose_name_plural = "Employee Statuses"
 
     def __str__(self):
         return f"{self.employee.full_name} — {self.status}"
