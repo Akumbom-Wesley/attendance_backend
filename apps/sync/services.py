@@ -54,6 +54,10 @@ class ERPNextSyncService:
 
         erpnext_employee_id = erpnext_data["name"]
         full_name = erpnext_data["employee_name"]
+        # Split full_name into first/last
+        name_parts = full_name.strip().split(" ", 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
         email = erpnext_data.get("company_email") or ""
         department = erpnext_data.get("department") or ""
         is_active = erpnext_data.get("status") == "Active"
@@ -63,6 +67,8 @@ class ERPNextSyncService:
             erpnext_employee_id=erpnext_employee_id,
             defaults={
                 "username": erpnext_employee_id,
+                "first_name": first_name,
+                "last_name": last_name,
                 "email": email,
                 "company": company,
                 "role": User.Role.EMPLOYEE,

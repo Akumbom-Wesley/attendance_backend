@@ -19,6 +19,7 @@ class CheckinValidationService:
     GPS_DEVICE_MAX_DELTA = 300   # seconds
     GPS_SERVER_MAX_DELTA = 600   # seconds
     VALID_CHECKOUT_STATUSES = {"present", "break", "errand", "assignment"}
+    INVALID_CHECKIN_STATUSES = {"present", "break", "errand", "assignment"}
 
     def __init__(self, payload: dict, server_now=None):
         self.payload = payload
@@ -236,8 +237,7 @@ class CheckinValidationService:
         return None
 
     def _check_log_type(self):
-        if self.payload.get("log_type") != "OUT":
-            return None
+        log_type = self.payload.get("log_type")
 
         latest_status = (
             EmployeeStatus.objects.filter(employee=self.employee)
@@ -245,18 +245,34 @@ class CheckinValidationService:
             .first()
         )
 
-        if not latest_status or latest_status.status not in self.VALID_CHECKOUT_STATUSES:
-            self._write_audit_log(
-                error_code="INVALID_LOG_TYPE",
-                final_decision="FAIL",
-                biometric_result=True,
-                geofence_result=True,
-                rssi_result=True,
-                antispoofing_result=True,
-                wifi_available=True,
-                two_factor_only=False,
-            )
-            return 422, {"detail": "Cannot clock out without a prior clock in."}
+        if log_type == "IN":
+            if latest_status and latest_status.status in self.INVALID_CHECKIN_STATUSES:
+                self._write_audit_log(
+                    error_code="INVALID_LOG_TYPE",
+                    final_decision="FAIL",
+                    biometric_result=True,
+                    geofence_result=True,
+                    rssi_result=True,
+                    antispoofing_result=True,
+                    wifi_available=True,
+                    two_factor_only=False,
+                )
+                return 422, {"detail": "Already checked in."}
+
+        if log_type == "OUT":
+            if not latest_status or latest_status.status not in self.VALID_CHECKOUT_STATUSES:
+                self._write_audit_log(
+                    error_code="INVALID_LOG_TYPE",
+                    final_decision="FAIL",
+                    biometric_result=True,
+                    geofence_result=True,
+                    rssi_result=True,
+                    antispoofing_result=True,
+                    wifi_available=True,
+                    two_factor_only=False,
+                )
+                return 422, {"detail": "Cannot clock out without a prior clock in."}
+
         return None
 
     def _pass(self, two_factor_only: bool):
@@ -276,6 +292,14 @@ class CheckinValidationService:
             wifi_bssid=self.payload.get("wifi_bssid", ""),
             wifi_band=self.payload.get("wifi_band", "UNAVAILABLE"),
             biometric_passed=self.payload.get("biometric_passed", False),
+        )
+
+        # Update employee status to reflect check-in/out
+        log_type = self.payload["log_type"]
+        new_status = "present" if log_type == "IN" else "checked_out"
+        EmployeeStatus.objects.create(
+            employee=self.employee,
+            status=new_status,
         )
 
         final_decision = "TWO_FACTOR_ONLY" if two_factor_only else "PASS"
@@ -388,6 +412,13 @@ class OfflineCheckinValidationService(CheckinValidationService):
             is_flagged=True,
             flag_reason="OFFLINE_RECORD",
         )
+
+        log_type = self.payload["log_type"]
+        new_status = "present" if log_type == "IN" else "checked_out"
+        EmployeeStatus.objects.create(
+            employee=self.employee,
+            status=new_status,
+)
 
         final_decision = "TWO_FACTOR_ONLY" if two_factor_only else "PASS"
 

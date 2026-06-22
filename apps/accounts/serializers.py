@@ -33,11 +33,15 @@ class LoginSerializer(serializers.Serializer):
 
     def get_tokens(self, user):
         refresh = RefreshToken.for_user(user)
+        profile = getattr(user, 'employee_profile', None)
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'role': user.role,
             'user_id': user.id,
+            'employee_id': profile.pk if profile else None,
+            'erpnext_employee_id': user.erpnext_employee_id,
+            'full_name': profile.full_name if profile else None,
         }
 
 
