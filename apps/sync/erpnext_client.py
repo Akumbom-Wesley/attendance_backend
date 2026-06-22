@@ -99,6 +99,7 @@ class ERPNextClient:
     def get_employee(self, erpnext_employee_id: str) -> dict:
         """Returns a single Employee record by ERPNext employee ID."""
         data = self._get(f"/api/resource/Employee/{erpnext_employee_id}")
+        
         return data.get("data", {})
     
     def _post(self, path: str, data: dict) -> dict:
@@ -125,3 +126,4 @@ class ERPNextClient:
         """
         result = self._post("/api/resource/Employee Checkin", {"data": data})
         return result.get("data", {})
+
