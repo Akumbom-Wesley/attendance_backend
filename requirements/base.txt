@@ -1,0 +1,27 @@
+# Core Framework
+Django
+djangorestframework
+psycopg2-binary
+python-decouple
+django-cors-headers
+whitenoise
+
+# Task Queue
+celery
+redis
+django-celery-beat
+django-celery-results
+
+# Authentication & Security
+djangorestframework-simplejwt
+cryptography
+django-ratelimit
+
+# API Documentation
+drf-spectacular
+
+# Timezone Handling
+pytz==2026.2
+
+#Report Generation
+reportlab==4.5.1
