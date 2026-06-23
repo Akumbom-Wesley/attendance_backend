@@ -58,35 +58,39 @@ class ERPNextSyncService:
         name_parts = full_name.strip().split(" ", 1)
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ""
-        email = erpnext_data.get("company_email") or ""
+        email = erpnext_data.get("company_email") or None
         department = erpnext_data.get("department") or ""
         is_active = erpnext_data.get("status") == "Active"
 
         # Upsert the User
+        user_defaults = {
+            "username": erpnext_employee_id,
+            "first_name": first_name,
+            "last_name": last_name,
+            "company": company,
+            "role": User.Role.EMPLOYEE,
+            "is_onboarded": False,
+        }
+        if email:
+            user_defaults["email"] = email
         user, _ = User.objects.update_or_create(
             erpnext_employee_id=erpnext_employee_id,
-            defaults={
-                "username": erpnext_employee_id,
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-                "company": company,
-                "role": User.Role.EMPLOYEE,
-                "is_onboarded": False,
-            },
+            defaults=user_defaults,
         )
 
         # Upsert the Employee profile
+        employee_defaults = {
+            "user": user,
+            "company": company,
+            "full_name": full_name,
+            "department": department,
+            "is_active": is_active,
+        }
+        if email:
+            employee_defaults["email"] = email
         employee, _ = Employee.objects.update_or_create(
             erpnext_employee_id=erpnext_employee_id,
-            defaults={
-                "user": user,
-                "company": company,
-                "full_name": full_name,
-                "email": email,
-                "department": department,
-                "is_active": is_active,
-            },
+            defaults=employee_defaults,
         )
         return employee
 
@@ -131,4 +135,41 @@ class ERPNextSyncService:
         return {
             "companies_synced": companies_synced,
             "employees_synced": employees_synced,
+        }
+    def sync_employees_for_company(self, erpnext_doc_name: str) -> dict:
+        """
+        Paginate through all Employees in ERPNext belonging to the given company
+        and upsert them locally. The Company must already exist locally.
+        Returns a summary dict: {employees_synced, employees_skipped}
+        """
+        try:
+            Company.objects.get(erpnext_doc_name=erpnext_doc_name)
+        except Company.DoesNotExist:
+            raise ValueError(
+                f"Company '{erpnext_doc_name}' not found locally. Run company sync first."
+            )
+
+        employees_synced = 0
+        employees_skipped = 0
+
+        limit_start = 0
+        while True:
+            records = self.client.get_employees_by_company(
+                erpnext_doc_name=erpnext_doc_name,
+                limit_start=limit_start,
+            )
+            if not records:
+                break
+            for record in records:
+                try:
+                    self.sync_employee(record)
+                    employees_synced += 1
+                except ValueError as e:
+                    logger.warning("Skipping employee %s: %s", record.get("name"), e)
+                    employees_skipped += 1
+            limit_start += len(records)
+
+        return {
+            "employees_synced": employees_synced,
+            "employees_skipped": employees_skipped,
         }

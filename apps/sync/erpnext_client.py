@@ -99,8 +99,24 @@ class ERPNextClient:
     def get_employee(self, erpnext_employee_id: str) -> dict:
         """Returns a single Employee record by ERPNext employee ID."""
         data = self._get(f"/api/resource/Employee/{erpnext_employee_id}")
-        
         return data.get("data", {})
+
+    def get_employees_by_company(self, erpnext_doc_name: str, limit_start: int = 0) -> list[dict]:
+        """
+        Returns one page of Employee records filtered by company.
+        Paginate by incrementing limit_start by PAGE_SIZE.
+        """
+        import json
+        data = self._get(
+            "/api/resource/Employee",
+            params={
+                "fields": EMPLOYEE_FIELDS,
+                "filters": json.dumps([["Employee", "company", "=", erpnext_doc_name]]),
+                "limit": PAGE_SIZE,
+                "limit_start": limit_start,
+            },
+        )
+        return data.get("data", [])
     
     def _post(self, path: str, data: dict) -> dict:
         """

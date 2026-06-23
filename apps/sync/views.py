@@ -52,3 +52,22 @@ class ResyncEmployeeView(APIView):
             return Response({"detail": str(e)}, status=502)
         except ValueError as e:
             return Response({"detail": str(e)}, status=400)
+
+class SyncCompanyEmployeesView(APIView):
+    permission_classes = [IsAuthenticated, IsSuperAdminOrHRAdmin]
+
+    def post(self, request, erpnext_doc_name):
+        service = ERPNextSyncService()
+        try:
+            result = service.sync_employees_for_company(erpnext_doc_name)
+            return Response({
+                "detail": "Employees synced.",
+                "erpnext_doc_name": erpnext_doc_name,
+                "employees_synced": result["employees_synced"],
+                "employees_skipped": result["employees_skipped"],
+            }, status=200)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except ERPNextAPIError as e:
+            logger.error("ERPNext API error during company employees sync: %s", e)
+            return Response({"detail": str(e)}, status=502)

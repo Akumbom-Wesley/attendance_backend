@@ -17,7 +17,7 @@ class Employee(BaseModel):
     )
     erpnext_employee_id = models.CharField(max_length=255, unique=True)
     full_name = models.CharField(max_length=255)
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255, unique=True, null=True, blank=True) #null is temporary. remoge later
     department = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
 
