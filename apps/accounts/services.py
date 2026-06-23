@@ -51,7 +51,7 @@ class OnboardingService:
 
     @staticmethod
     def _send_onboarding_email(user, token):
-        import requests as http_requests
+        from django.core.mail import EmailMultiAlternatives
 
         link = f"{settings.FRONTEND_BASE_URL}/set-password?token={token}"
         full_name = user.get_full_name()
@@ -177,26 +177,17 @@ class OnboardingService:
 </body>
 </html>"""
 
-        from django.conf import settings as django_settings
-        api_key = django_settings.EMAIL_HOST_PASSWORD
-        response = http_requests.post(
-            "https://api.resend.com/emails",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "from": django_settings.DEFAULT_FROM_EMAIL,
-                "to": [user.email],
-                "subject": subject,
-                "text": text_body,
-                "html": html_body,
-            },
-            timeout=30,
+        from django.core.mail import get_connection
+        connection = get_connection(timeout=15)
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=None,
+            to=[user.email],
+            connection=connection,
         )
-        if not response.ok:
-            raise Exception(f"Resend API error {response.status_code}: {response.text}")
-        logger.info("Resend API response: %s", response.json())
+        msg.attach_alternative(html_body, "text/html")
+        msg.send()
 
     # ------------------------------------------------------------------
     # Public methods
