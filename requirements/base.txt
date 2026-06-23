@@ -26,3 +26,4 @@ pytz==2026.2
 #Report Generation
 reportlab==4.5.1
 dj-database-url
+requests
