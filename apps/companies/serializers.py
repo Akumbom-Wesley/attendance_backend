@@ -35,3 +35,16 @@ class GeofenceSiteSerializer(serializers.ModelSerializer):
             'updated_at',
         )
         read_only_fields = ('id', 'created_at', 'updated_at')
+
+class GeofenceSiteMobileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GeofenceSite
+        fields = [
+            "wifi_ssid",
+            "wifi_bssid",
+            "rssi_threshold",
+            "enforce_5ghz",
+            "latitude",
+            "longitude",
+            "radius_metres",
+        ]

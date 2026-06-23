@@ -1,27 +1,22 @@
 from rest_framework import generics, status
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Company
-from .serializers import CompanySerializer
+from django.shortcuts import get_object_or_404
+
+from .models import Company, GeofenceSite
+from .serializers import CompanySerializer, GeofenceSiteSerializer, GeofenceSiteMobileSerializer
 from .permissions import IsSuperAdmin
 from .services import CompanyService
 
 
 class CompanyListView(generics.ListAPIView):
-    """
-    Super Admin views all registered companies.
-    Companies are never created here — they come from ERPNext sync.
-    """
     queryset = Company.objects.all().order_by('-created_at')
     serializer_class = CompanySerializer
     permission_classes = (IsSuperAdmin,)
 
 
 class CompanyRetrieveUpdateView(generics.RetrieveUpdateAPIView):
-    """
-    Retrieve or update local config fields only.
-    ERPNext-owned fields (name, erpnext_doc_name) are read-only.
-    """
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     permission_classes = (IsSuperAdmin,)
@@ -50,3 +45,23 @@ class CompanyDeactivateView(APIView):
                 {'detail': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class GeofenceSiteMobileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        company = request.user.company
+        site = GeofenceSite.objects.filter(
+            company=company,
+            is_active=True,
+        ).first()
+
+        if site is None:
+            return Response(
+                {'detail': 'No active geofence site found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = GeofenceSiteMobileSerializer(site)
+        return Response(serializer.data)
