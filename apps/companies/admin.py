@@ -36,6 +36,21 @@ class CompanyAdmin(admin.ModelAdmin):
                 f"Employees synced: {result['employees_synced']}.",
                 messages.SUCCESS,
             )
+            # Auto-trigger onboarding emails for all newly synced employees
+            from apps.accounts.services import OnboardingService
+            onboarding = OnboardingService()
+            # Use a synthetic super admin context — bulk import is a super admin action
+            from apps.accounts.models import User
+            super_admin = User.objects.filter(role=User.Role.SUPER_ADMIN).first()
+            if super_admin:
+                onboarding_result = onboarding.trigger_bulk(super_admin)
+                self.message_user(
+                    request,
+                    f"Onboarding emails sent: {onboarding_result['triggered']}, "
+                    f"skipped (already onboarded): {onboarding_result['skipped']}, "
+                    f"skipped (no email): {onboarding_result['skipped_no_email']}.",
+                    messages.SUCCESS,
+                )
         except ERPNextAPIError as e:
             self.message_user(request, f"ERPNext API error: {e}", messages.ERROR)
         return redirect('admin:companies_company_changelist')

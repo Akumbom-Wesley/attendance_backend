@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from django.views import View
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -109,3 +110,9 @@ class ResendOnboardingView(APIView):
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"detail": "Onboarding email resent."}, status=status.HTTP_200_OK)
+
+from django.shortcuts import render
+
+class SetPasswordPageView(View):
+    def get(self, request):
+        return render(request, 'onboarding/set_password.html')

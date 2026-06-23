@@ -5,6 +5,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
+from apps.accounts.views import SetPasswordPageView
 
 urlpatterns = [
     # Admin
@@ -15,15 +16,17 @@ urlpatterns = [
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 
-    # App routes — wired in as we build each app
+    # Set password web page (onboarding deep link)
+    path('set-password/', SetPasswordPageView.as_view(), name='set_password_page'),
+
+    # App routes
     path('api/v1/auth/', include('apps.accounts.urls')),
     path('api/v1/companies/', include('apps.companies.urls')),
     path('api/v1/employees/', include('apps.employees.urls', namespace='employees')),
     path('api/v1/devices/', include('apps.devices.urls')),
     path('api/v1/checkins/', include('apps.checkins.urls', namespace='checkins')),
     path('api/v1/webhooks/', include('apps.webhooks.urls', namespace='webhooks')),
-#     path('api/v1/audit/', include('apps.audit.urls')),
     path('api/v1/sync/', include('apps.sync.urls', namespace='sync')),
-    path("api/v1/reports/", include("apps.reports.urls")),
+    path('api/v1/reports/', include('apps.reports.urls')),
     path('api/v1/onboarding/', include('apps.accounts.onboarding_urls')),
- ]
+]
