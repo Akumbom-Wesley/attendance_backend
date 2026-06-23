@@ -177,11 +177,14 @@ class OnboardingService:
 </body>
 </html>"""
 
+        from django.core.mail import get_connection
+        connection = get_connection(timeout=15)
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_body,
             from_email=None,
             to=[user.email],
+            connection=connection,
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send()
