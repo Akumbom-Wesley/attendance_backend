@@ -17,6 +17,14 @@ def send_onboarding_email_task(self, user_id: int, token: str):
     from apps.accounts.services import OnboardingService
 
     try:
+        from django.conf import settings
+        logger.info(
+            "Email config — HOST:%s PORT:%s USER:%s FROM:%s",
+            settings.EMAIL_HOST,
+            settings.EMAIL_PORT,
+            settings.EMAIL_HOST_USER,
+            settings.DEFAULT_FROM_EMAIL,
+        )
         user = User.objects.get(pk=user_id)
         OnboardingService._send_onboarding_email(user, token)
         logger.info("Onboarding email sent to user %s", user_id)
