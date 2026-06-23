@@ -97,7 +97,8 @@ class EmployeeAdmin(admin.ModelAdmin):
                     skipped_no_email += 1
                     continue
                 token = service._generate_and_save_token(employee.user)
-                service._send_onboarding_email(employee.user, token)
+                from apps.accounts.tasks import send_onboarding_email_task
+                send_onboarding_email_task.delay(employee.user.pk, token)
                 sent += 1
             except Exception as e:
                 errors.append(f"{employee.full_name}: {e}")

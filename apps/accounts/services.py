@@ -205,7 +205,8 @@ class OnboardingService:
             raise ValueError("Employee has no email address.")
 
         token = self._generate_and_save_token(employee.user)
-        self._send_onboarding_email(employee.user, token)
+        from apps.accounts.tasks import send_onboarding_email_task
+        send_onboarding_email_task.delay(employee.user.pk, token)
         return employee
 
     def trigger_bulk(self, requesting_user):
@@ -230,7 +231,8 @@ class OnboardingService:
                 skipped_no_email += 1
                 continue
             token = self._generate_and_save_token(employee.user)
-            self._send_onboarding_email(employee.user, token)
+            from apps.accounts.tasks import send_onboarding_email_task
+            send_onboarding_email_task.delay(employee.user.pk, token)
             triggered += 1
 
         return {
@@ -253,7 +255,8 @@ class OnboardingService:
             raise ValueError("Employee has no email address.")
 
         token = self._generate_and_save_token(employee.user)
-        self._send_onboarding_email(employee.user, token)
+        from apps.accounts.tasks import send_onboarding_email_task
+        send_onboarding_email_task.delay(employee.user.pk, token)
         return employee
 
     @staticmethod
