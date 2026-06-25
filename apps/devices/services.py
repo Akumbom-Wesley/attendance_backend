@@ -41,9 +41,13 @@ class DeviceBindingService:
 
     @staticmethod
     def unbind(binding):
+        # Soft-delete device_unique_id so the physical device can be
+        # rebound to another employee without hitting the unique constraint.
+        timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
+        binding.device_unique_id = f"{binding.device_unique_id}_unbound_{timestamp}"
         binding.is_active = False
         binding.unbound_at = timezone.now()
-        binding.save(update_fields=['is_active', 'unbound_at'])
+        binding.save(update_fields=['device_unique_id', 'is_active', 'unbound_at'])
         return binding
 
     @staticmethod
