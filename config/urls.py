@@ -29,4 +29,5 @@ urlpatterns = [
     path('api/v1/sync/', include('apps.sync.urls', namespace='sync')),
     path('api/v1/reports/', include('apps.reports.urls')),
     path('api/v1/onboarding/', include('apps.accounts.onboarding_urls')),
+    path('api/v1/dashboard/', include('apps.accounts.dashboard_urls')),
 ]

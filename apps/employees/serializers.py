@@ -3,6 +3,7 @@ from apps.employees.models import Employee, EmployeeStatus
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    is_onboarded = serializers.BooleanField(source="user.is_onboarded", read_only=True)
     class Meta:
         model = Employee
         fields = [
@@ -12,6 +13,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "email",
             "department",
             "is_active",
+            "is_onboarded",
             "company",
         ]
         read_only_fields = fields

@@ -103,3 +103,19 @@ class FlaggedRecordRejectView(APIView):
             record, request.user, serializer.validated_data["review_note"]
         )
         return Response({"detail": "Record rejected."}, status=status.HTTP_200_OK)
+
+class FlaggedRecordDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        if request.user.role not in ("HR_ADMIN", "SUPER_ADMIN"):
+            return Response(
+                {"detail": "You do not have permission to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        from apps.checkins.services import FlaggedRecordService
+        from apps.checkins.serializers import FlaggedRecordSerializer
+
+        record = FlaggedRecordService.get_flagged_record_for_user(pk, request.user)
+        serializer = FlaggedRecordSerializer(record)
+        return Response(serializer.data, status=status.HTTP_200_OK)

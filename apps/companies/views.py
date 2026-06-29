@@ -65,3 +65,16 @@ class GeofenceSiteMobileView(APIView):
 
         serializer = GeofenceSiteMobileSerializer(site)
         return Response(serializer.data)
+
+class CompanyMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        company = request.user.company
+        if company is None:
+            return Response(
+                {"detail": "No company associated with your account."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = CompanySerializer(company)
+        return Response(serializer.data)

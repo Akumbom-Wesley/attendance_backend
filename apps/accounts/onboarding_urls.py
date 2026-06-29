@@ -1,5 +1,7 @@
 from django.urls import path
 from .views import (
+    OnboardingStatsView,
+    OnboardingPendingView,
     TriggerOnboardingView, BulkTriggerOnboardingView,
     SetPasswordView, ResendOnboardingView,
 )
@@ -9,4 +11,6 @@ urlpatterns = [
     path('trigger/<str:erpnext_employee_id>/', TriggerOnboardingView.as_view(), name='onboarding_trigger'),
     path('set-password/', SetPasswordView.as_view(), name='onboarding_set_password'),
     path('resend/<str:erpnext_employee_id>/', ResendOnboardingView.as_view(), name='onboarding_resend'),
+    path("stats/", OnboardingStatsView.as_view(), name="onboarding-stats"),
+    path("pending/", OnboardingPendingView.as_view(), name="onboarding-pending"),
 ]
