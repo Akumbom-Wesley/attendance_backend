@@ -56,7 +56,7 @@ class EmployeeHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role != "EMPLOYEE":
+        if request.user.role not in ("HR_ADMIN", "EMPLOYEE"):
             return Response(
                 {"detail": "You do not have permission to perform this action."},
                 status=status.HTTP_403_FORBIDDEN,
